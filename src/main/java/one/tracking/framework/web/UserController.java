@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,14 +19,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import one.tracking.framework.dto.UserAddressDto;
 import one.tracking.framework.dto.UserCreateDto;
 import one.tracking.framework.dto.UserDto;
 import one.tracking.framework.entity.User;
 import one.tracking.framework.entity.UserAddress;
-import one.tracking.framework.events.UserUpdated;
-import one.tracking.framework.producers.UserUpdatedProducer;
+import one.tracking.framework.kafka.events.UserCredentials;
+import one.tracking.framework.kafka.producers.UserCredentialsProducer;
 import one.tracking.framework.repo.UserAddressRepository;
 import one.tracking.framework.repo.UserRepository;
 import one.tracking.framework.security.SecurityConstants;
@@ -54,7 +56,13 @@ public class UserController {
   private JWTHelper jwtHelper;
 
   @Autowired
-  private UserUpdatedProducer userUpdatedProducer;
+  private UserCredentialsProducer producer;
+
+  @Autowired
+  private ObjectMapper mapper;
+
+  @Value("${app.jwe.secret}")
+  private String jweEncodedSecret;
 
   @RequestMapping(method = RequestMethod.GET)
   public UserDto getUser(final Authentication authentication) {
@@ -65,7 +73,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
   public String createUser(
       @RequestBody
-      final UserCreateDto userCreate) {
+      final UserCreateDto userCreate) throws Exception {
 
     if (this.userRepository.existsByEmail(userCreate.getEmail()))
       throw new IllegalArgumentException("Email does already exist.");
@@ -87,13 +95,18 @@ public class UserController {
 
     // TODO: Email verification: Send email
 
-    this.userUpdatedProducer.userUpdated(UserUpdated.builder()
+    final UserCredentials userCredentials = UserCredentials.builder()
+        .userId(user.getId())
         .email(user.getEmail())
-        .firstName(user.getFirstName())
-        .id(user.getId())
-        .lastName(user.getLastName())
-        .password(user.getEncryptedPassword())
-        .build());
+        .encrytedPassword(user.getEncryptedPassword())
+        .build();
+
+    final String jwe =
+        this.jwtHelper.createJWE(this.jweEncodedSecret, this.mapper.writeValueAsString(userCredentials));
+
+    System.out.println(jwe);
+
+    this.producer.send(user.getId(), jwe);
 
     return user.getId();
   }
