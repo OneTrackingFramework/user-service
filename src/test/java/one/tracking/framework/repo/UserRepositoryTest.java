@@ -14,11 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import one.tracking.framework.config.TestConfig;
 import one.tracking.framework.entity.User;
-import one.tracking.framework.repo.UserRepository;
 
 /**
  * @author Marko Voß
@@ -27,6 +28,14 @@ import one.tracking.framework.repo.UserRepository;
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
 @Import(TestConfig.class)
+@EnableKafka
+@EmbeddedKafka(
+    partitions = 1,
+    controlledShutdown = false,
+    brokerProperties = {
+        "listeners=PLAINTEXT://localhost:3333",
+        "port=3333"
+    })
 public class UserRepositoryTest {
 
   @Autowired
