@@ -1,0 +1,26 @@
+name: Continuous Integration
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    env: 
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SETTINGS_PATH: ${{ github.workspace }}/.github/workflows/settings.xml
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Java and Maven
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+          
+      - name: Compile
+        run: mvn -B -s $SETTINGS_PATH compile 
+
+#      Enable when tests pass
+#      - name: Test
+#        run: mvn -B -s $SETTINGS_PATH test
+
