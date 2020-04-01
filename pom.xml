@@ -19,18 +19,25 @@
 		<java.version>11</java.version>
 	</properties>
 
+      <repositories>
+        <repository>
+	  <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+        </repository>
+        <repository>
+          <id>github</id>
+          <name>GitHub OneTrackingFramework Apache Maven Packages</name>
+          <url>https://maven.pkg.github.com/OneTrackingFramework</url>
+        </repository>
+      </repositories>
+
 	<dependencies>
 
 		<dependency>
 			<groupId>one.tracking.framework</groupId>
 			<artifactId>kafka-module-boot</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>one.tracking.framework</groupId>
-			<artifactId>commons-boot</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 		</dependency>
 
 		<dependency>
