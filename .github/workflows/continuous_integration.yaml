@@ -20,7 +20,6 @@ jobs:
       - name: Compile
         run: mvn -B -s $SETTINGS_PATH compile 
 
-#      Enable when tests pass
-#      - name: Test
-#        run: mvn -B -s $SETTINGS_PATH test
+      - name: Test
+        run: mvn -B -s $SETTINGS_PATH test
 
